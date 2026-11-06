@@ -4,23 +4,22 @@ import neat
 
 import agent
 
+HELD_OUT_SEEDS = [9_000_001, 9_000_002, 9_000_003]  # training seeds are seed * 100_000 + n, so these never collide
 
-def test_train_reaches_cap_and_winner_generalises(tmp_path, monkeypatch):
+
+def test_train_converges_and_winner_clears_unseen_courses(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    seen = []  # (generation, score) for every frame
+    cap = agent.load_config().fitness_threshold
+    generations = []
 
-    def record(world, info):
-        seen.append((info["generation"], world.score))
+    winner = agent.train(generations=50, seed=1, on_frame=lambda world, info: generations.append(info["generation"]))
 
-    agent.train(generations=50, seed=1, on_frame=record)
-
-    first_cap = next(gen for gen, score in seen if score >= agent.MAX_SCORE)
-    assert first_cap < 50
-    assert seen[-1][0] == first_cap  # reaching the cap ended training
+    assert generations[-1] < 49  # stopped early because a genome cleared every course, not because it ran out
     assert isinstance(pickle.loads((tmp_path / "winner.pkl").read_bytes()), neat.DefaultGenome)
+    assert winner.fitness >= cap
 
-    def stop_at_50(world, info):
-        if world.score >= 50:
+    def stop_at_cap(world, info):
+        if world.score >= cap:
             raise agent.Stop
 
-    assert agent.play_winner(seed=987654, on_frame=stop_at_50) >= 50
+    assert [agent.play_winner(seed, stop_at_cap) for seed in HELD_OUT_SEEDS] == [cap] * len(HELD_OUT_SEEDS)

@@ -80,7 +80,7 @@ def draw(surface: pygame.Surface, world: World, hud: dict[str, str]) -> None:
     surface.blit(score, score.get_rect(center=(WIDTH // 2, (FLOOR_Y + HEIGHT) // 2 + 2)))
     panel = pygame.Surface((170, 8 + 20 * len(hud)), pygame.SRCALPHA)
     panel.fill((10, 6, 30, 150))
-    surface.blit(panel, (8, FLOOR_Y + 8 if False else 8))
+    surface.blit(panel, (8, 8))
     for i, (key, value) in enumerate(hud.items()):
         text = _font(22).render(f"{key} {value}", True, (235, 225, 245))
         surface.blit(text, (14, 12 + 20 * i))

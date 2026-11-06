@@ -1,8 +1,8 @@
 # Adapted from neat-python 2.0.0 examples/xor/config-feedforward.
 [NEAT]
 fitness_criterion   = max
-# Fitness of a bird alive at the pipe cap: MAX_SCORE + 0.01 * frames needed to pass it.
-fitness_threshold   = 173.8
+# Pipes a genome must pass on every course. Also the cap that ends a course.
+fitness_threshold   = 100
 pop_size            = 50
 reset_on_extinction = False
 no_fitness_termination = False

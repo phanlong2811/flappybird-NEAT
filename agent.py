@@ -4,12 +4,11 @@ from pathlib import Path
 
 import neat
 
-from game import BIRD_X, FLOOR_Y, GAP_H, HEIGHT, MAX_FALL, WIDTH, World
+from game import BIRD_X, FLOOR_Y, GAP_H, HEIGHT, MAX_FALL, WIDTH, Bird, World
 
 CONFIG_PATH = Path(__file__).parent / "config-feedforward.txt"
 WINNER_PATH = Path("winner.pkl")
-MAX_SCORE = 100
-SURVIVAL_WEIGHT = 0.01
+COURSES = 10  # courses flown per generation; a genome scores its worst one
 
 
 class Stop(Exception):
@@ -21,7 +20,7 @@ def load_config() -> neat.Config:
                        neat.DefaultSpeciesSet, neat.DefaultStagnation, str(CONFIG_PATH))
 
 
-def observe(world: World, bird) -> list[float]:
+def observe(world: World, bird: Bird) -> list[float]:
     pipe = world.next_pipe()
     return [
         bird.y / FLOOR_Y,
@@ -33,21 +32,23 @@ def observe(world: World, bird) -> list[float]:
 
 
 def run_world(world, nets, on_frame=None, info=None, max_score=None) -> list[float]:
-    """Play nets[i] as bird i until all die or max_score is reached. Returns each bird's fitness."""
+    """Play nets[i] as bird i until all die or max_score is reached. Returns each bird's fitness:
+    pipes passed plus a survival bonus below 1, so only passing max_score pipes reaches max_score."""
     fitness = [0.0] * len(nets)
     while not world.done and (max_score is None or world.score < max_score):
         world.step([b.alive and net.activate(observe(world, b))[0] > 0.5
                     for b, net in zip(world.birds, nets)])
         for i, bird in enumerate(world.birds):
             if bird.alive:  # a bird keeps the score it had on its last living frame
-                fitness[i] = world.score + SURVIVAL_WEIGHT * world.frame
+                fitness[i] = world.score + world.frame / (world.frame + 100)
         if on_frame:
             on_frame(world, info or {})
     return fitness
 
 
 def train(generations: int = 50, seed: int = 0, on_frame=None):
-    """Evolve for up to `generations`, save the winner to winner.pkl and return it."""
+    """Evolve for up to `generations`, save the winner to winner.pkl and return it.
+    Training ends when a genome passes `fitness_threshold` pipes on every course of a generation."""
     config = load_config()
     pop = neat.Population(config, seed=seed)
     pop.add_reporter(neat.StdOutReporter(True))
@@ -58,9 +59,13 @@ def train(generations: int = 50, seed: int = 0, on_frame=None):
         nets = [neat.nn.FeedForwardNetwork.create(g, config) for _, g in genomes]
         best = max((g.fitness for g in stats.most_fit_genomes), default=0.0)
         info = {"generation": pop.generation, "best": best}
-        world = World(len(nets), seed=seed + pop.generation)
-        for (_, genome), fit in zip(genomes, run_world(world, nets, on_frame, info, MAX_SCORE)):
-            genome.fitness = fit
+        fits = []
+        for course in range(COURSES):
+            world = World(len(nets), seed=seed * 100_000 + pop.generation * COURSES + course)
+            hook = on_frame if course == 0 else None  # draw one course per generation, run the rest headless
+            fits.append(run_world(world, nets, hook, info, config.fitness_threshold))
+        for (_, genome), per_course in zip(genomes, zip(*fits)):
+            genome.fitness = min(per_course)
 
     try:
         winner = pop.run(evaluate, generations)
