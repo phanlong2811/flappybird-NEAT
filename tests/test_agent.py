@@ -4,7 +4,7 @@ import neat
 
 import agent
 
-HELD_OUT_SEEDS = [9_000_001, 9_000_002, 9_000_003]  # training seeds are seed * 100_000 + n, so these never collide
+HELD_OUT_SEEDS = [9_000_001, 9_000_002, 9_000_003]  # seed 1 trains on courses 100_000 + n, so these are unseen
 
 
 def test_train_converges_and_winner_clears_unseen_courses(tmp_path, monkeypatch):
