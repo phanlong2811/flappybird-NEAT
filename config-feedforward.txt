@@ -1,7 +1,5 @@
-# Adapted from neat-python 2.0.0 examples/xor/config-feedforward.
 [NEAT]
 fitness_criterion   = max
-# Pipes a genome must pass on every course. Also the cap that ends a course.
 fitness_threshold   = 100
 pop_size            = 50
 reset_on_extinction = False

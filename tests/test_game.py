@@ -5,7 +5,6 @@ from game import BIRD_X, FLOOR_Y, GAP_H, PIPE_W, Pipe, World
 
 def test_idle_bird_hits_the_floor():
     world = World(1, seed=0)
-    # Free fall from mid-height at gravity 0.5 px/frame^2 reaches the floor in under 100 frames.
     for _ in range(100):
         world.step([False])
     assert world.done
@@ -14,16 +13,17 @@ def test_idle_bird_hits_the_floor():
 
 def test_bird_in_pipe_body_dies_on_that_frame():
     world = World(2, seed=0)
-    world.pipes = [Pipe(x=BIRD_X, gap_y=300)]
-    world.birds[0].y = 300 - GAP_H / 2 - 30  # inside the upper pipe
-    world.birds[1].y = 300  # centre of the gap
+    gap_center = 300
+    world.pipes = [Pipe(x=BIRD_X, gap_center=gap_center)]
+    world.birds[0].y = gap_center - GAP_H / 2 - 30
+    world.birds[1].y = gap_center
     world.step([False, False])
     assert [b.alive for b in world.birds] == [False, True]
 
 
 def oracle(world):
     pipe = world.next_pipe()
-    return [b.y > pipe.gap_y and b.vy >= 0 for b in world.birds]
+    return [b.y > pipe.gap_center and b.vy >= 0 for b in world.birds]
 
 
 @pytest.mark.parametrize("seed", range(10))
@@ -39,13 +39,13 @@ def test_same_seed_same_course():
     for _ in range(600):
         a.step(oracle(a))
         b.step(oracle(b))
-    assert [p.gap_y for p in a.pipes] == [p.gap_y for p in b.pipes]
+    assert [p.gap_center for p in a.pipes] == [p.gap_center for p in b.pipes]
     assert a.score == b.score > 0
 
 
 def test_pipe_scrolls_out_and_is_scored():
     world = World(1, seed=0)
-    world.pipes = [Pipe(x=BIRD_X - PIPE_W - 20, gap_y=300)]
+    world.pipes = [Pipe(x=BIRD_X - PIPE_W - 20, gap_center=300)]
     world.birds[0].y = 300
     world.step([False])
     assert world.score == 1

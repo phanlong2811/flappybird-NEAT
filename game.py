@@ -1,4 +1,3 @@
-"""Pipe-dodger rules. Pure Python, fixed 60 steps per second, no pygame."""
 import random
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -8,8 +7,8 @@ FLOOR_Y = 540
 BIRD_X, BIRD_R = 100, 12
 GRAVITY, FLAP_VY, MAX_FALL = 0.5, -7.0, 10.0
 PIPE_W, GAP_H, PIPE_SPEED, PIPE_SPACING = 60, 160, 3.0, 220
-GAP_MARGIN = 40  # smallest distance between a gap and the ceiling or floor
-MAX_SHIFT = 130  # largest gap move between neighbouring pipes, so every course can be climbed
+GAP_MARGIN = 40
+MAX_GAP_SHIFT = 130
 
 
 @dataclass
@@ -21,8 +20,8 @@ class Bird:
 
 @dataclass
 class Pipe:
-    x: float  # left edge
-    gap_y: float  # centre of the gap
+    x: float
+    gap_center: float
     passed: bool = False
 
 
@@ -34,10 +33,10 @@ class World:
         self.frame = 0
         self.score = 0
 
-    def _new_pipe(self, x: float, prev_gap_y: float) -> Pipe:
-        lo = GAP_H / 2 + GAP_MARGIN
-        gap_y = prev_gap_y + self.rng.uniform(-MAX_SHIFT, MAX_SHIFT)
-        return Pipe(x, min(FLOOR_Y - lo, max(lo, gap_y)))
+    def _new_pipe(self, x: float, prev_gap_center: float) -> Pipe:
+        min_gap_center = GAP_H / 2 + GAP_MARGIN
+        gap_center = prev_gap_center + self.rng.uniform(-MAX_GAP_SHIFT, MAX_GAP_SHIFT)
+        return Pipe(x, min(FLOOR_Y - min_gap_center, max(min_gap_center, gap_center)))
 
     def next_pipe(self) -> Pipe:
         return next(p for p in self.pipes if not p.passed)
@@ -54,7 +53,7 @@ class World:
             pipe.x -= PIPE_SPEED
         while self.pipes[-1].x < WIDTH:
             last = self.pipes[-1]
-            self.pipes.append(self._new_pipe(last.x + PIPE_SPACING, last.gap_y))
+            self.pipes.append(self._new_pipe(last.x + PIPE_SPACING, last.gap_center))
         self.pipes = [p for p in self.pipes if p.x + PIPE_W > 0]
         for pipe in self.pipes:
             if not pipe.passed and pipe.x + PIPE_W < BIRD_X - BIRD_R:
@@ -70,7 +69,7 @@ class World:
         return any(
             p.x < BIRD_X + BIRD_R
             and p.x + PIPE_W > BIRD_X - BIRD_R
-            and abs(bird.y - p.gap_y) > GAP_H / 2 - BIRD_R
+            and abs(bird.y - p.gap_center) > GAP_H / 2 - BIRD_R
             for p in self.pipes
         )
 

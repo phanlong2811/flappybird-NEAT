@@ -27,7 +27,7 @@ The file started from neat-python's `examples/xor/config-feedforward`. The keys 
 
 - `pop_size`. Larger populations find a winner in fewer generations and cost more per generation.
 - `fitness_threshold`. The pipe count a winner must pass on every course. It is the only place the cap lives.
-- `COURSES` in `agent.py`. More courses per generation make the winner less likely to fail on a layout it never saw, and make each generation slower.
+- `COURSES_PER_GENERATION` in `agent.py`. More courses per generation make the winner less likely to fail on a layout it never saw, and make each generation slower.
 - `conn_add_prob`, `node_add_prob`. Higher values grow networks faster. `num_hidden = 0` starts with no hidden nodes.
 - `weight_mutate_rate`, `weight_mutate_power`. These set how far a child's weights drift from its parent's.
 - `compatibility_threshold`. A lower value splits the population into more species.

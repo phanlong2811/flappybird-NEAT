@@ -1,4 +1,3 @@
-"""Drawing only: a dusk scene with stone pillars and translucent birds."""
 import random
 from functools import cache
 
@@ -9,7 +8,7 @@ from game import BIRD_R, BIRD_X, FLOOR_Y, GAP_H, HEIGHT, PIPE_SPEED, PIPE_W, WID
 SKY_TOP, SKY_LOW = (24, 16, 56), (214, 98, 130)
 STONE, STONE_DARK, STONE_LIGHT = (218, 200, 160), (150, 128, 98), (244, 232, 200)
 GROUND, GROUND_RIM = (43, 18, 51), (240, 160, 70)
-BIRD_BODY, BIRD_WING, BIRD_ALPHA = (110, 235, 255), (30, 120, 190), 110
+BIRD_BODY, BIRD_WING, SWARM_ALPHA = (110, 235, 255), (30, 120, 190), 110
 CAP_H = 24
 
 
@@ -63,7 +62,7 @@ def draw(surface: pygame.Surface, world: World, hud: dict[str, str]) -> None:
     surface.blit(_background(), (0, 0))
     for pipe in world.pipes:
         x = round(pipe.x)
-        gap_top, gap_bottom = round(pipe.gap_y - GAP_H / 2), round(pipe.gap_y + GAP_H / 2)
+        gap_top, gap_bottom = round(pipe.gap_center - GAP_H / 2), round(pipe.gap_center + GAP_H / 2)
         _pillar(surface, x, 0, gap_top, gap_top - CAP_H)
         _pillar(surface, x, gap_bottom, FLOOR_Y, gap_bottom)
     pygame.draw.rect(surface, GROUND, (0, FLOOR_Y, WIDTH, HEIGHT - FLOOR_Y))
@@ -71,7 +70,7 @@ def draw(surface: pygame.Surface, world: World, hud: dict[str, str]) -> None:
     offset = round(world.frame * PIPE_SPEED) % 24
     for x in range(-offset, WIDTH, 24):
         pygame.draw.line(surface, (70, 34, 80), (x, FLOOR_Y + 8), (x - 10, HEIGHT), 2)
-    sprite = _bird_sprite(255 if len(world.birds) == 1 else BIRD_ALPHA)  # translucent only as a swarm
+    sprite = _bird_sprite(255 if len(world.birds) == 1 else SWARM_ALPHA)
     for bird in world.birds:
         if bird.alive:
             tilted = pygame.transform.rotate(sprite, -max(-30, min(60, bird.vy * 5)))

@@ -1,4 +1,3 @@
-"""CLI: `train` evolves a winner, `watch` plays it."""
 import argparse
 import os
 
@@ -13,7 +12,6 @@ FPS = 60
 
 
 def make_hook(title: str, extra=lambda info: {}):
-    """Build an on_frame hook that draws each frame, stops on window close and runs unthrottled while SPACE is held."""
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption(title)
