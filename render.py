@@ -35,7 +35,7 @@ def _background() -> pygame.Surface:
 
 
 @cache
-def _bird_sprite() -> pygame.Surface:
+def _bird_sprite(alpha: int) -> pygame.Surface:
     size = 4 * BIRD_R
     sprite = pygame.Surface((size, size), pygame.SRCALPHA)
     c = size // 2
@@ -43,7 +43,7 @@ def _bird_sprite() -> pygame.Surface:
     pygame.draw.ellipse(sprite, BIRD_WING, (c - BIRD_R, c - 2, BIRD_R + 2, BIRD_R - 2))
     pygame.draw.polygon(sprite, (255, 150, 90), [(c + BIRD_R - 2, c - 3), (c + BIRD_R + 7, c + 1), (c + BIRD_R - 2, c + 4)])
     pygame.draw.circle(sprite, (20, 12, 40), (c + 5, c - 4), 2)
-    sprite.set_alpha(BIRD_ALPHA)
+    sprite.set_alpha(alpha)
     return sprite
 
 
@@ -71,7 +71,7 @@ def draw(surface: pygame.Surface, world: World, hud: dict[str, str]) -> None:
     offset = round(world.frame * PIPE_SPEED) % 24
     for x in range(-offset, WIDTH, 24):
         pygame.draw.line(surface, (70, 34, 80), (x, FLOOR_Y + 8), (x - 10, HEIGHT), 2)
-    sprite = _bird_sprite()
+    sprite = _bird_sprite(255 if len(world.birds) == 1 else BIRD_ALPHA)  # translucent only as a swarm
     for bird in world.birds:
         if bird.alive:
             tilted = pygame.transform.rotate(sprite, -max(-30, min(60, bird.vy * 5)))
